@@ -3,7 +3,7 @@ import time
 import random
 import os
 
-# Colors
+# ANSI Color Codes To Insert As STR Into Text
 
 MAGENTA = "\u001b[35m"
 BLACK = "\033[0;30m"
