@@ -1,5 +1,6 @@
 { pkgs }: {
   deps = [
+    pkgs.unixtools.nettools
     pkgs.python38Full
   ];
   env = {
