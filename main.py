@@ -29,6 +29,7 @@
 import time
 import random
 import os
+from cryptograph import *
 from datetime import datetime
 from cryptography.fernet import Fernet
 import hashlib  # Check For Cheating To Hash Scores File
@@ -86,21 +87,14 @@ key = 0
 
 
 # Readback And Open Key Into ENV For ENC And DEC
-with open('MyKey.key', 'rb') as mykey:
-    key = mykey.read()
-
 global fKey
-fKey = Fernet(key)
+temp = readKey()
+fKey = temp
+fKey = Fernet(temp)
 
 # Get Terminal Size
 columns, lines = os.get_terminal_size()
 size = os.get_terminal_size()
-
-def generateKey():
-  key = Fernet.generate_key()
-  # Write Encryption Key To "MyKey.key" File
-  with open('MyKey.key', 'wb') as mykey:
-   mykey.write(key)
 
 def restoreLastScore():
   global currentBetSum
