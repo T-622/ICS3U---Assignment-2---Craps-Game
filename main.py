@@ -96,37 +96,44 @@ fKey = Fernet(temp)
 columns, lines = os.get_terminal_size()
 size = os.get_terminal_size()
 
-def restoreLastScore():
+def storeScore():  
+  with open('TEMP.scores','a') as file:  # Open History.scores in append mode, write to last line
+    data = fKey.encrypt(currentBetSum.to_bytes(2, byteorder='big'))
+    data = data.decode('UTF-8')
+    file.write(str(data)+"\n")
+    file.close()
+
+def restoreLastScore():  # Function To Prompt User To Restore Bet And Decrypt Values
   global currentBetSum
-  try:
-    yesNoPrompt = str(
-      input("\n\u001b[33mRestore Last Score? (y/n): \u001b[0m"))
-  except ValueError:
-    print("\n\u001b[31mEnter 'Y' Or 'N'!\u001b[0m")  # Trap Errata Input
-  else:
-    if (yesNoPrompt == ""):
-      print("\n\u001b[31mEnter 'Y' Or 'N'!\u001b[0m")  # Check For Enter Key
-      
-    elif (yesNoPrompt in "yY"):  # Check For Y
-      with open('TEMP.scores', 'r') as f:
-        print(GREEN + "\nUsing Last Bank" + RESET)
-        last_line = f.readlines()[-1]
-        decrypted = fKey.decrypt(last_line)
-        decrypted = int.from_bytes(decrypted, 'big')
-        currentBetSum = int(decrypted)
-        f.close()
-        
-
-    elif (yesNoPrompt in "nN"):  # Check For N
-      print(GREEN + "\nUsing Default Bank" + RESET)
+  while True:
+    try:
+      yesNoPrompt = str(
+        input("\n\u001b[33mRestore Last Score? (y/n): \u001b[0m"))
+    except ValueError:
+      print("\n\u001b[31mEnter 'Y' Or 'N'!\u001b[0m")  # Trap Errata Input
     else:
-      print("\n\u001b[31mEnter 'Y' Or 'N'!\u001b[0m")
+      if (yesNoPrompt == ""):
+        print("\n\u001b[31mEnter 'Y' Or 'N'!\u001b[0m")  # Check For Enter Key
+      elif (yesNoPrompt in "yY"):  # Check For Y
+        with open('TEMP.scores', 'r') as f:
+          print(GREEN + "\nUsing Last Bank" + RESET)
+          last_line = f.readlines()[-1]
+          decrypted = fKey.decrypt(last_line)
+          decrypted = int.from_bytes(decrypted, 'big')
+          currentBetSum = int(decrypted)
+          f.close()
+          break
+      elif (yesNoPrompt in "nN"):  # Check For N
+        print(GREEN + "\nUsing Default Bank" + RESET)
+        break
+      else:
+        print("\n\u001b[31mEnter 'Y' Or 'N'!\u001b[0m")
+  
 
-
-def checkHash(fileName):
-  print(YELLOW + "Checking Score File MD5..." + RESET)
+def checkHash(fileName):  # Use Crypto To Decode File MD5
+  print(YELLOW + "\nChecking Score File MD5..." + RESET)
   md5 = hashlib.md5(open(fileName, 'rb').read()).hexdigest()
-  print(md5)
+  print(BLUE+md5+RESET+"\n")
 
 def printWallet():  # Function To Print Wallet Sum With Color
   global currentBetSum  # Declare Variables As Global
@@ -162,11 +169,11 @@ def bet():  # Function To Get User Bet + Error Checking
   return None  # Finish Function By Returning NULL Charecter
 
 
-def endGame():
+def endGame():  # Outro
   print("\nThanks For Playing", name, "!")
 
 
-def rollDice(range1, range2):
+def rollDice(range1, range2):  # Function That Takes 2 Upper Ranges To Roll Dices
   global die1
   global die2
   die1 = random.randint(1, range1)
@@ -201,6 +208,7 @@ def continueGame():  # Function To Shoot Dice And Get User Input Over And Over
     winsCounter = winsCounter + 1
     currentBetSum = currentBetSum + betVal
     printWallet()
+    storeScore()
 
   elif sum1 in (2, 3, 12):  # Check For 2, 3 Or 12 For Crapping Score
 
@@ -209,12 +217,13 @@ def continueGame():  # Function To Shoot Dice And Get User Input Over And Over
     lossesCounter = lossesCounter + 1
     currentBetSum = currentBetSum - betVal
     printWallet()
+    storeScore()
 
   else:
 
     print(YELLOW +"\nYou have rolled anything other than a 2, 3, 7, 11, or 12, therefore you must roll over and over, to get your last score!")
     printWallet()
-    while True:
+    while True: # Prompt the code to run over and over until a winning or losing score is reached at which point break is issued
       input(GREEN + "\nPress Enter To Roll Again...")
       os.system('clear')
       print(CYAN + "\nOnto The Next One!" + RESET)
@@ -227,17 +236,19 @@ def continueGame():  # Function To Shoot Dice And Get User Input Over And Over
       sum1 = die1 + die2
       print(MAGENTA + "Rolled Score:", sum1, "" + RESET)
 
-      if (sum1 == 7):
+      if (sum1 == 7): # Break Out Of Rolling Loop For Loss And Subtract Bet
         print(RED + "\nYou Lose! (Scored 7)" + RESET)
-        lossesCounter = lossesCounter + 1
-        currentBetSum = currentBetSum - betVal
+        lossesCounter = lossesCounter + 1  # Increase Losses Counter
+        currentBetSum = currentBetSum - betVal  # Decrease Wallet
         printWallet()
+        storeScore()
         break
-      elif (sum1 == pointScore):
+      elif (sum1 == pointScore):  # Break Out Of Loop Following Win And Add To Wallet
         print(GREEN + "\nYou Win!" + RESET)
-        winsCounter = winsCounter + 1
-        currentBetSum = currentBetSum + betVal
+        winsCounter = winsCounter + 1  # Increase Wins Counter
+        currentBetSum = currentBetSum + betVal  # Increase Wallet
         printWallet()
+        storeScore()
         break
       else:
         print(RED + "\nYou haven't gained a winning or crapping score!" +
@@ -258,33 +269,39 @@ def intro(windowWidth):
   print("-= By: Tyler Peppy =-   ".center(windowWidth))
   time.sleep(2)  # Use Blocking Call To Delay Logic
   os.system('clear')
+  print(YELLOW+"---------------------------------------------------------------")
+  print("Hi! Welcome to Craps! A game of chance to test your luck!")
+  print("Directions: You will roll 2 dice, of which will be added.")
+  print("These numbers when added if equalling 7 or 11, will result")
+  print("on an automatic win. Else, if 2, 3 or 12 are rolled, you will")
+  print("automatically lose. For any other number, you have to roll")
+  print("over and over to obtain your last 'hold' score, when you can")
+  print("roll 7, in which you lose, or your last score, in which you win!")
+  print("---------------------------------------------------------------"+RESET)
+  print(MAGENTA+"\nNote: There is betting too! Although I don't advocate for it..."+RESET)
+  print(GREEN+"Good Luck player!"+RESET)
 
-
-def storeScore():  # Function To Store History Data In Variables
+def storeHistory(): # Function To Store History Data In Variables
   global winsCounter
   global lossesCounter
 
-  lines = "Attempt On:", datetime.today().strftime(
+  lines = 'Attempt On:', datetime.today().strftime(
     '%Y-%m-%d %H:%M:%S'
-  ), ", Resulted in", winsCounter, "Wins +", lossesCounter, "Losses"
+  ), ', Resulted in', winsCounter, 'Wins +', lossesCounter, 'xLosses'
   lines = str(lines)
   with open('History.scores','a') as file:  # Open History.scores in append mode, write to last line
     file.write(lines + "\n")
     file.close()
-  with open('TEMP.scores','a') as file:  # Open History.scores in append mode, write to last line
-    data = fKey.encrypt(currentBetSum.to_bytes(2, byteorder='big'))
-    data = data.decode('UTF-8')
-    file.write(str(data)+"\n")
-    file.close()
     
 
-
+    
 intro(size.columns)  # Auto-Center Intro To Window Size
 random.seed(random.random())  # Generate Less Psuedo-Random Number Generation
 checkHash("TEMP.scores")
 
-while True:
-  while True:
+def getName():
+  global name
+  while True:  # Trap User In Infinite Loop To Enter Name Correctly, Without ValueError
     try:
       name = str(input(BLUE + "Hi Player, What's Your Name?: " + RESET))
     except ValueError:
@@ -295,7 +312,10 @@ while True:
       else:
         break
 
-  while True:
+while True:
+  getName() # Function To Get Name From User
+  
+  while True:  # Prompt For Proper Response If The User Wants To Continue Or Not
     try:
       yesNoPrompt = str(
         input(
@@ -303,7 +323,7 @@ while True:
         ))
     except ValueError:
       print("\n\u001b[31mEnter 'Y' Or 'N'!\u001b[0m")  # Trap Errata Input
-    else:
+    else:  
       if (yesNoPrompt == ""):
         print("\n\u001b[31mEnter 'Y' Or 'N'!\u001b[0m")  # Check For Enter Key
       elif (yesNoPrompt in "yY"):  # Check For Y
@@ -320,6 +340,7 @@ while True:
         continueGame()
       elif (yesNoPrompt in "nN"):  # Check For N
         print(GREEN + "Thanks For Using This Program!" + RESET)
+        storeHistory()
         storeScore()
         break
       else:
