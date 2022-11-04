@@ -120,10 +120,15 @@ def restoreLastScore():  # Function To Prompt User To Restore Bet And Decrypt Va
           last_line = f.readlines()[-1]
           decrypted = fKey.decrypt(last_line)
           decrypted = int.from_bytes(decrypted, 'big')
-          currentBetSum = int(decrypted)
+          temp = int(decrypted)
+          if (temp <= 0):
+            print(RED+"\nYour Last Score Was Zero, So You Have $ 2000 To Spend! Don't Waste It!"+RESET)
+          else:
+            currentBetSum = int(decrypted)
           f.close()
           break
       elif (yesNoPrompt in "nN"):  # Check For N
+        currentBetSum = 2000
         print(GREEN + "\nUsing Default Bank" + RESET)
         break
       else:
@@ -313,13 +318,17 @@ def getName():
         break
 
 while True:
+  
   getName() # Function To Get Name From User
   
   while True:  # Prompt For Proper Response If The User Wants To Continue Or Not
     try:
+      if (currentBetSum <= 0):
+        print(RED+"\nYou Don't Have Any Money! Get Out!"+RESET)
+        break
       yesNoPrompt = str(
         input(
-          "\n\u001b[33mWant to play a new game [Enter n to save score!]? (y/n): \u001b[0m"
+          "\n\u001b[33mWant to play a new game ? (y/n): \u001b[0m"
         ))
     except ValueError:
       print("\n\u001b[31mEnter 'Y' Or 'N'!\u001b[0m")  # Trap Errata Input
@@ -345,4 +354,8 @@ while True:
         break
       else:
         print("\n\u001b[31mEnter 'Y' Or 'N'!\u001b[0m")
-  break
+        
+  if (currentBetSum <= 0):  # Kick User Out After They've Run Out Of Money
+    break
+    
+  break                     # Break That Responds After Someone Responds N To Previous Statement
