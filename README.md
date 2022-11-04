@@ -16,7 +16,7 @@ Usage:
 - Run the main.py file within the folder itself, as the MyKey.key and History.Scores must be present in the same directory
 
 Mark:
-- Not Assigned Yet
+- ~98%
 
 Link:
 - Repl.it: https://replit.com/@TYLERPEPPY1/ICS3U-Assignment-2-Craps-Game#main.py 
